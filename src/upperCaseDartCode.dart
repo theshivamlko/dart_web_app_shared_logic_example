@@ -2,7 +2,6 @@
 
 
 import 'dart:js_interop';
-import 'dart:js';
 
 void main() {
   _toUpperCaseEachWord=toUpperCaseEachWord.toJS;
