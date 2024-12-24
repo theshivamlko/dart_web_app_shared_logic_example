@@ -226,59 +226,6 @@
     hunk(hunkHelpers, init, holders, $);
   }
   var J = {
-    makeDispatchRecord(interceptor, proto, extension, indexability) {
-      return {i: interceptor, p: proto, e: extension, x: indexability};
-    },
-    getNativeInterceptor(object) {
-      var proto, objectProto, $constructor, interceptor, t1,
-        record = object[init.dispatchPropertyName];
-      if (record == null)
-        if ($.initNativeDispatchFlag == null) {
-          A.initNativeDispatch();
-          record = object[init.dispatchPropertyName];
-        }
-      if (record != null) {
-        proto = record.p;
-        if (false === proto)
-          return record.i;
-        if (true === proto)
-          return object;
-        objectProto = Object.getPrototypeOf(object);
-        if (proto === objectProto)
-          return record.i;
-        if (record.e === objectProto)
-          throw A.wrapException(A.UnimplementedError$("Return interceptor for " + A.S(proto(object, record))));
-      }
-      $constructor = object.constructor;
-      if ($constructor == null)
-        interceptor = null;
-      else {
-        t1 = $._JS_INTEROP_INTERCEPTOR_TAG;
-        if (t1 == null)
-          t1 = $._JS_INTEROP_INTERCEPTOR_TAG = init.getIsolateTag("_$dart_js");
-        interceptor = $constructor[t1];
-      }
-      if (interceptor != null)
-        return interceptor;
-      interceptor = A.lookupAndCacheInterceptor(object);
-      if (interceptor != null)
-        return interceptor;
-      if (typeof object == "function")
-        return B.JavaScriptFunction_methods;
-      proto = Object.getPrototypeOf(object);
-      if (proto == null)
-        return B.PlainJavaScriptObject_methods;
-      if (proto === Object.prototype)
-        return B.PlainJavaScriptObject_methods;
-      if (typeof $constructor == "function") {
-        t1 = $._JS_INTEROP_INTERCEPTOR_TAG;
-        if (t1 == null)
-          t1 = $._JS_INTEROP_INTERCEPTOR_TAG = init.getIsolateTag("_$dart_js");
-        Object.defineProperty($constructor, t1, {value: B.UnknownJavaScriptObject_methods, enumerable: false, writable: true, configurable: true});
-        return B.UnknownJavaScriptObject_methods;
-      }
-      return B.UnknownJavaScriptObject_methods;
-    },
     JSArray_JSArray$markFixed(allocation, $E) {
       return J.JSArray_markFixedList(A._setArrayType(allocation, $E._eval$1("JSArray<0>")), $E);
     },
@@ -300,26 +247,22 @@
         return J.JSBool.prototype;
       if (Array.isArray(receiver))
         return J.JSArray.prototype;
-      if (typeof receiver != "object") {
-        if (typeof receiver == "function")
-          return J.JavaScriptFunction.prototype;
-        if (typeof receiver == "symbol")
-          return J.JavaScriptSymbol.prototype;
-        if (typeof receiver == "bigint")
-          return J.JavaScriptBigInt.prototype;
-        return receiver;
+      if (typeof receiver == "function")
+        return J.JavaScriptFunction.prototype;
+      if (typeof receiver == "object") {
+        if (receiver instanceof A.Object) {
+          return receiver;
+        } else {
+          return J.JavaScriptObject.prototype;
+        }
       }
-      if (receiver instanceof A.Object)
-        return receiver;
-      return J.getNativeInterceptor(receiver);
+      return receiver;
     },
     getInterceptor$a(receiver) {
       if (receiver == null)
         return receiver;
       if (Array.isArray(receiver))
         return J.JSArray.prototype;
-      if (!(receiver instanceof A.Object))
-        return J.UnknownJavaScriptObject.prototype;
       return receiver;
     },
     getInterceptor$as(receiver) {
@@ -329,8 +272,6 @@
         return receiver;
       if (Array.isArray(receiver))
         return J.JSArray.prototype;
-      if (!(receiver instanceof A.Object))
-        return J.UnknownJavaScriptObject.prototype;
       return receiver;
     },
     get$hashCode$(receiver) {
@@ -368,15 +309,7 @@
     },
     LegacyJavaScriptObject: function LegacyJavaScriptObject() {
     },
-    PlainJavaScriptObject: function PlainJavaScriptObject() {
-    },
-    UnknownJavaScriptObject: function UnknownJavaScriptObject() {
-    },
     JavaScriptFunction: function JavaScriptFunction() {
-    },
-    JavaScriptBigInt: function JavaScriptBigInt() {
-    },
-    JavaScriptSymbol: function JavaScriptSymbol() {
     },
     JSArray: function JSArray(t0) {
       this.$ti = t0;
@@ -471,11 +404,15 @@
       return A.Primitives__objectTypeNameNewRti(object);
     },
     Primitives__objectTypeNameNewRti(object) {
-      var interceptor, dispatchName, $constructor, constructorName;
+      var interceptor, t1, dispatchName, $constructor, constructorName;
       if (object instanceof A.Object)
         return A._rtiToString(A.instanceType(object), null);
       interceptor = J.getInterceptor$(object);
-      if (interceptor === B.Interceptor_methods || interceptor === B.JavaScriptObject_methods || type$.UnknownJavaScriptObject._is(object)) {
+      if (interceptor !== B.Interceptor_methods)
+        t1 = interceptor === B.JavaScriptObject_methods;
+      else
+        t1 = true;
+      if (t1) {
         dispatchName = B.C_JS_CONST(object);
         if (dispatchName !== "Object" && dispatchName !== "")
           return dispatchName;
@@ -861,147 +798,6 @@
     throwCyclicInit(staticName) {
       throw A.wrapException(new A._CyclicInitializationError(staticName));
     },
-    getIsolateAffinityTag($name) {
-      return init.getIsolateTag($name);
-    },
-    lookupAndCacheInterceptor(obj) {
-      var interceptor, interceptorClass, altTag, mark, t1,
-        tag = A._asString($.getTagFunction.call$1(obj)),
-        record = $.dispatchRecordsForInstanceTags[tag];
-      if (record != null) {
-        Object.defineProperty(obj, init.dispatchPropertyName, {value: record, enumerable: false, writable: true, configurable: true});
-        return record.i;
-      }
-      interceptor = $.interceptorsForUncacheableTags[tag];
-      if (interceptor != null)
-        return interceptor;
-      interceptorClass = init.interceptorsByTag[tag];
-      if (interceptorClass == null) {
-        altTag = A._asStringQ($.alternateTagFunction.call$2(obj, tag));
-        if (altTag != null) {
-          record = $.dispatchRecordsForInstanceTags[altTag];
-          if (record != null) {
-            Object.defineProperty(obj, init.dispatchPropertyName, {value: record, enumerable: false, writable: true, configurable: true});
-            return record.i;
-          }
-          interceptor = $.interceptorsForUncacheableTags[altTag];
-          if (interceptor != null)
-            return interceptor;
-          interceptorClass = init.interceptorsByTag[altTag];
-          tag = altTag;
-        }
-      }
-      if (interceptorClass == null)
-        return null;
-      interceptor = interceptorClass.prototype;
-      mark = tag[0];
-      if (mark === "!") {
-        record = A.makeLeafDispatchRecord(interceptor);
-        $.dispatchRecordsForInstanceTags[tag] = record;
-        Object.defineProperty(obj, init.dispatchPropertyName, {value: record, enumerable: false, writable: true, configurable: true});
-        return record.i;
-      }
-      if (mark === "~") {
-        $.interceptorsForUncacheableTags[tag] = interceptor;
-        return interceptor;
-      }
-      if (mark === "-") {
-        t1 = A.makeLeafDispatchRecord(interceptor);
-        Object.defineProperty(Object.getPrototypeOf(obj), init.dispatchPropertyName, {value: t1, enumerable: false, writable: true, configurable: true});
-        return t1.i;
-      }
-      if (mark === "+")
-        return A.patchInteriorProto(obj, interceptor);
-      if (mark === "*")
-        throw A.wrapException(A.UnimplementedError$(tag));
-      if (init.leafTags[tag] === true) {
-        t1 = A.makeLeafDispatchRecord(interceptor);
-        Object.defineProperty(Object.getPrototypeOf(obj), init.dispatchPropertyName, {value: t1, enumerable: false, writable: true, configurable: true});
-        return t1.i;
-      } else
-        return A.patchInteriorProto(obj, interceptor);
-    },
-    patchInteriorProto(obj, interceptor) {
-      var proto = Object.getPrototypeOf(obj);
-      Object.defineProperty(proto, init.dispatchPropertyName, {value: J.makeDispatchRecord(interceptor, proto, null, null), enumerable: false, writable: true, configurable: true});
-      return interceptor;
-    },
-    makeLeafDispatchRecord(interceptor) {
-      return J.makeDispatchRecord(interceptor, false, null, !!interceptor.$isJavaScriptIndexingBehavior);
-    },
-    makeDefaultDispatchRecord(tag, interceptorClass, proto) {
-      var interceptor = interceptorClass.prototype;
-      if (init.leafTags[tag] === true)
-        return A.makeLeafDispatchRecord(interceptor);
-      else
-        return J.makeDispatchRecord(interceptor, proto, null, null);
-    },
-    initNativeDispatch() {
-      if (true === $.initNativeDispatchFlag)
-        return;
-      $.initNativeDispatchFlag = true;
-      A.initNativeDispatchContinue();
-    },
-    initNativeDispatchContinue() {
-      var map, tags, fun, i, tag, proto, record, interceptorClass;
-      $.dispatchRecordsForInstanceTags = Object.create(null);
-      $.interceptorsForUncacheableTags = Object.create(null);
-      A.initHooks();
-      map = init.interceptorsByTag;
-      tags = Object.getOwnPropertyNames(map);
-      if (typeof window != "undefined") {
-        window;
-        fun = function() {
-        };
-        for (i = 0; i < tags.length; ++i) {
-          tag = tags[i];
-          proto = $.prototypeForTagFunction.call$1(tag);
-          if (proto != null) {
-            record = A.makeDefaultDispatchRecord(tag, map[tag], proto);
-            if (record != null) {
-              Object.defineProperty(proto, init.dispatchPropertyName, {value: record, enumerable: false, writable: true, configurable: true});
-              fun.prototype = proto;
-            }
-          }
-        }
-      }
-      for (i = 0; i < tags.length; ++i) {
-        tag = tags[i];
-        if (/^[A-Za-z_]/.test(tag)) {
-          interceptorClass = map[tag];
-          map["!" + tag] = interceptorClass;
-          map["~" + tag] = interceptorClass;
-          map["-" + tag] = interceptorClass;
-          map["+" + tag] = interceptorClass;
-          map["*" + tag] = interceptorClass;
-        }
-      }
-    },
-    initHooks() {
-      var transformers, i, transformer, getTag, getUnknownTag, prototypeForTag,
-        hooks = B.C_JS_CONST0();
-      hooks = A.applyHooksTransformer(B.C_JS_CONST1, A.applyHooksTransformer(B.C_JS_CONST2, A.applyHooksTransformer(B.C_JS_CONST3, A.applyHooksTransformer(B.C_JS_CONST3, A.applyHooksTransformer(B.C_JS_CONST4, A.applyHooksTransformer(B.C_JS_CONST5, A.applyHooksTransformer(B.C_JS_CONST6(B.C_JS_CONST), hooks)))))));
-      if (typeof dartNativeDispatchHooksTransformer != "undefined") {
-        transformers = dartNativeDispatchHooksTransformer;
-        if (typeof transformers == "function")
-          transformers = [transformers];
-        if (Array.isArray(transformers))
-          for (i = 0; i < transformers.length; ++i) {
-            transformer = transformers[i];
-            if (typeof transformer == "function")
-              hooks = transformer(hooks) || hooks;
-          }
-      }
-      getTag = hooks.getTag;
-      getUnknownTag = hooks.getUnknownTag;
-      prototypeForTag = hooks.prototypeForTag;
-      $.getTagFunction = new A.initHooks_closure(getTag);
-      $.alternateTagFunction = new A.initHooks_closure0(getUnknownTag);
-      $.prototypeForTagFunction = new A.initHooks_closure1(prototypeForTag);
-    },
-    applyHooksTransformer(transformer, hooks) {
-      return transformer(hooks) || hooks;
-    },
     createRecordTypePredicate(shape, fieldRtis) {
       var $length = fieldRtis.length,
         $function = init.rttc["" + $length + ";" + shape];
@@ -1068,15 +864,6 @@
       this.hashMapCellKey = t0;
       this.hashMapCellValue = t1;
       this._next = null;
-    },
-    initHooks_closure: function initHooks_closure(t0) {
-      this.getTag = t0;
-    },
-    initHooks_closure0: function initHooks_closure0(t0) {
-      this.getUnknownTag = t0;
-    },
-    initHooks_closure1: function initHooks_closure1(t0) {
-      this.prototypeForTag = t0;
     },
     Rti__getQuestionFromStar(universe, rti) {
       var question = rti._precomputed1;
@@ -2759,9 +2546,6 @@
     UnsupportedError$(message) {
       return new A.UnsupportedError(message);
     },
-    UnimplementedError$(message) {
-      return new A.UnimplementedError(message);
-    },
     ConcurrentModificationError$(modifiedObject) {
       return new A.ConcurrentModificationError(modifiedObject);
     },
@@ -2928,9 +2712,6 @@
     UnsupportedError: function UnsupportedError(t0) {
       this.message = t0;
     },
-    UnimplementedError: function UnimplementedError(t0) {
-      this.message = t0;
-    },
     ConcurrentModificationError: function ConcurrentModificationError(t0) {
       this.modifiedObject = t0;
     },
@@ -2943,10 +2724,8 @@
     StringBuffer: function StringBuffer(t0) {
       this._contents = t0;
     },
-    DomException: function DomException() {
-    },
     main() {
-      self.abc = type$.JavaScriptFunction._as(A.allowInterop(A.upperCaseDartCode__toUpperCaseEachWord$closure(), type$.Function));
+      self.toUpperCaseEachWord = type$.JavaScriptFunction._as(A.allowInterop(A.upperCaseDartCode__toUpperCaseEachWord$closure(), type$.Function));
     },
     toUpperCaseEachWord(input) {
       var t1 = type$.MappedListIterable_String_String;
@@ -3038,8 +2817,6 @@
       return String(receiver);
     }
   };
-  J.PlainJavaScriptObject.prototype = {};
-  J.UnknownJavaScriptObject.prototype = {};
   J.JavaScriptFunction.prototype = {
     toString$0(receiver) {
       var dartClosure = receiver[$.$get$DART_CLOSURE_PROPERTY_NAME()];
@@ -3048,22 +2825,6 @@
       return "JavaScript function for " + J.toString$0$(dartClosure);
     },
     $isFunction: 1
-  };
-  J.JavaScriptBigInt.prototype = {
-    get$hashCode(receiver) {
-      return 0;
-    },
-    toString$0(receiver) {
-      return String(receiver);
-    }
-  };
-  J.JavaScriptSymbol.prototype = {
-    get$hashCode(receiver) {
-      return 0;
-    },
-    toString$0(receiver) {
-      return String(receiver);
-    }
   };
   J.JSArray.prototype = {
     add$1(receiver, value) {
@@ -3541,24 +3302,6 @@
     }
   };
   A.LinkedHashMapCell.prototype = {};
-  A.initHooks_closure.prototype = {
-    call$1(o) {
-      return this.getTag(o);
-    },
-    $signature: 2
-  };
-  A.initHooks_closure0.prototype = {
-    call$2(o, tag) {
-      return this.getUnknownTag(o, tag);
-    },
-    $signature: 3
-  };
-  A.initHooks_closure1.prototype = {
-    call$1(tag) {
-      return this.prototypeForTag(A._asString(tag));
-    },
-    $signature: 4
-  };
   A.Rti.prototype = {
     _eval$1(recipe) {
       return A._Universe_evalInEnvironment(init.typeUniverse, this, recipe);
@@ -3602,7 +3345,7 @@
       t2 = A.S(v);
       t1._contents += t2;
     },
-    $signature: 5
+    $signature: 2
   };
   A._UnmodifiableMapMixin.prototype = {};
   A.MapView.prototype = {
@@ -3633,7 +3376,7 @@
       t1._contents += t3;
       t2.comma = ", ";
     },
-    $signature: 6
+    $signature: 3
   };
   A.Error.prototype = {};
   A.AssertionError.prototype = {
@@ -3732,11 +3475,6 @@
       return "Unsupported operation: " + this.message;
     }
   };
-  A.UnimplementedError.prototype = {
-    toString$0(_) {
-      return "UnimplementedError: " + this.message;
-    }
-  };
   A.ConcurrentModificationError.prototype = {
     toString$0(_) {
       var t1 = this.modifiedObject;
@@ -3794,13 +3532,6 @@
       return t1.charCodeAt(0) == 0 ? t1 : t1;
     }
   };
-  A.DomException.prototype = {
-    toString$0(receiver) {
-      var t1 = String(receiver);
-      t1.toString;
-      return t1;
-    }
-  };
   A.toUpperCaseEachWord_closure.prototype = {
     call$1(word) {
       var t1;
@@ -3830,12 +3561,12 @@
       _inheritMany = hunkHelpers.inheritMany;
     _inherit(A.Object, null);
     _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, J.ArrayIterator, A.Error, A.Iterable, A.ListIterator, A.Symbol, A.MapView, A.ConstantMap, A.JSInvocationMirror, A.Closure, A._Required, A.MapBase, A.LinkedHashMapCell, A.Rti, A._FunctionParameters, A._Type, A._UnmodifiableMapMixin, A.Null, A.StringBuffer]);
-    _inheritMany(J.Interceptor, [J.JSBool, J.JSNull, J.JavaScriptObject, J.JavaScriptBigInt, J.JavaScriptSymbol, J.JSNumber, J.JSString]);
-    _inheritMany(J.JavaScriptObject, [J.LegacyJavaScriptObject, J.JSArray, A.DomException]);
-    _inheritMany(J.LegacyJavaScriptObject, [J.PlainJavaScriptObject, J.UnknownJavaScriptObject, J.JavaScriptFunction]);
+    _inheritMany(J.Interceptor, [J.JSBool, J.JSNull, J.JavaScriptObject, J.JSNumber, J.JSString]);
+    _inheritMany(J.JavaScriptObject, [J.LegacyJavaScriptObject, J.JSArray]);
+    _inherit(J.JavaScriptFunction, J.LegacyJavaScriptObject);
     _inherit(J.JSUnmodifiableArray, J.JSArray);
     _inheritMany(J.JSNumber, [J.JSInt, J.JSNumNotInt]);
-    _inheritMany(A.Error, [A.LateError, A._CyclicInitializationError, A.RuntimeError, A._Error, A.AssertionError, A.TypeError, A.ArgumentError, A.NoSuchMethodError, A.UnsupportedError, A.UnimplementedError, A.ConcurrentModificationError]);
+    _inheritMany(A.Error, [A.LateError, A._CyclicInitializationError, A.RuntimeError, A._Error, A.AssertionError, A.TypeError, A.ArgumentError, A.NoSuchMethodError, A.UnsupportedError, A.ConcurrentModificationError]);
     _inherit(A.EfficientLengthIterable, A.Iterable);
     _inherit(A.ListIterable, A.EfficientLengthIterable);
     _inherit(A.MappedListIterable, A.ListIterable);
@@ -3843,8 +3574,8 @@
     _inherit(A.UnmodifiableMapView, A._UnmodifiableMapView_MapView__UnmodifiableMapMixin);
     _inherit(A.ConstantMapView, A.UnmodifiableMapView);
     _inherit(A.ConstantStringMap, A.ConstantMap);
-    _inheritMany(A.Closure, [A.Closure2Args, A.TearOffClosure, A.initHooks_closure, A.initHooks_closure1, A.toUpperCaseEachWord_closure]);
-    _inheritMany(A.Closure2Args, [A.Primitives_functionNoSuchMethod_closure, A.initHooks_closure0, A.MapBase_mapToString_closure, A.NoSuchMethodError_toString_closure]);
+    _inheritMany(A.Closure, [A.Closure2Args, A.TearOffClosure, A.toUpperCaseEachWord_closure]);
+    _inheritMany(A.Closure2Args, [A.Primitives_functionNoSuchMethod_closure, A.MapBase_mapToString_closure, A.NoSuchMethodError_toString_closure]);
     _inheritMany(A.TearOffClosure, [A.StaticClosure, A.BoundClosure]);
     _inherit(A.JsLinkedHashMap, A.MapBase);
     _inherit(A._TypeError, A._Error);
@@ -3855,12 +3586,12 @@
     typeUniverse: {eC: new Map(), tR: {}, eT: {}, tPV: {}, sEA: []},
     mangledGlobalNames: {int: "int", double: "double", num: "num", String: "String", bool: "bool", Null: "Null", List: "List", Object: "Object", Map: "Map"},
     mangledNames: {},
-    types: ["String(String)", "~(String,@)", "@(@)", "@(@,String)", "@(String)", "~(Object?,Object?)", "~(Symbol0,@)"],
+    types: ["String(String)", "~(String,@)", "~(Object?,Object?)", "~(Symbol0,@)"],
     interceptorsByTag: null,
     leafTags: null,
     arrayRti: Symbol("$ti")
   };
-  A._Universe_addRules(init.typeUniverse, JSON.parse('{"JavaScriptFunction":"LegacyJavaScriptObject","PlainJavaScriptObject":"LegacyJavaScriptObject","UnknownJavaScriptObject":"LegacyJavaScriptObject","JSBool":{"bool":[],"TrustedGetRuntimeType":[]},"JSNull":{"TrustedGetRuntimeType":[]},"JSArray":{"List":["1"],"Iterable":["1"]},"JSUnmodifiableArray":{"JSArray":["1"],"List":["1"],"Iterable":["1"]},"JSNumber":{"num":[]},"JSInt":{"int":[],"num":[],"TrustedGetRuntimeType":[]},"JSNumNotInt":{"num":[],"TrustedGetRuntimeType":[]},"JSString":{"String":[],"TrustedGetRuntimeType":[]},"EfficientLengthIterable":{"Iterable":["1"]},"ListIterable":{"Iterable":["1"]},"MappedListIterable":{"ListIterable":["2"],"Iterable":["2"],"ListIterable.E":"2"},"Symbol":{"Symbol0":[]},"ConstantMapView":{"UnmodifiableMapView":["1","2"],"_UnmodifiableMapView_MapView__UnmodifiableMapMixin":["1","2"],"MapView":["1","2"],"_UnmodifiableMapMixin":["1","2"],"Map":["1","2"]},"ConstantMap":{"Map":["1","2"]},"ConstantStringMap":{"ConstantMap":["1","2"],"Map":["1","2"]},"JSInvocationMirror":{"Invocation":[]},"Closure":{"Function":[]},"Closure2Args":{"Function":[]},"TearOffClosure":{"Function":[]},"StaticClosure":{"Function":[]},"BoundClosure":{"Function":[]},"JsLinkedHashMap":{"MapBase":["1","2"],"Map":["1","2"]},"MapBase":{"Map":["1","2"]},"MapView":{"Map":["1","2"]},"UnmodifiableMapView":{"_UnmodifiableMapView_MapView__UnmodifiableMapMixin":["1","2"],"MapView":["1","2"],"_UnmodifiableMapMixin":["1","2"],"Map":["1","2"]}}'));
+  A._Universe_addRules(init.typeUniverse, JSON.parse('{"JavaScriptFunction":"LegacyJavaScriptObject","JSBool":{"bool":[],"TrustedGetRuntimeType":[]},"JSNull":{"TrustedGetRuntimeType":[]},"JSArray":{"List":["1"],"Iterable":["1"]},"JSUnmodifiableArray":{"JSArray":["1"],"List":["1"],"Iterable":["1"]},"JSNumber":{"num":[]},"JSInt":{"int":[],"num":[],"TrustedGetRuntimeType":[]},"JSNumNotInt":{"num":[],"TrustedGetRuntimeType":[]},"JSString":{"String":[],"TrustedGetRuntimeType":[]},"EfficientLengthIterable":{"Iterable":["1"]},"ListIterable":{"Iterable":["1"]},"MappedListIterable":{"ListIterable":["2"],"Iterable":["2"],"ListIterable.E":"2"},"Symbol":{"Symbol0":[]},"ConstantMapView":{"UnmodifiableMapView":["1","2"],"_UnmodifiableMapView_MapView__UnmodifiableMapMixin":["1","2"],"MapView":["1","2"],"_UnmodifiableMapMixin":["1","2"],"Map":["1","2"]},"ConstantMap":{"Map":["1","2"]},"ConstantStringMap":{"ConstantMap":["1","2"],"Map":["1","2"]},"JSInvocationMirror":{"Invocation":[]},"Closure":{"Function":[]},"Closure2Args":{"Function":[]},"TearOffClosure":{"Function":[]},"StaticClosure":{"Function":[]},"BoundClosure":{"Function":[]},"JsLinkedHashMap":{"MapBase":["1","2"],"Map":["1","2"]},"MapBase":{"Map":["1","2"]},"MapView":{"Map":["1","2"]},"UnmodifiableMapView":{"_UnmodifiableMapView_MapView__UnmodifiableMapMixin":["1","2"],"MapView":["1","2"],"_UnmodifiableMapMixin":["1","2"],"Map":["1","2"]}}'));
   A._Universe_addErasedTypes(init.typeUniverse, JSON.parse('{"EfficientLengthIterable":1}'));
   var type$ = (function rtii() {
     var findType = A.findType;
@@ -3883,7 +3614,6 @@
       String_Function_String: findType("String(String)"),
       Symbol: findType("Symbol0"),
       TrustedGetRuntimeType: findType("TrustedGetRuntimeType"),
-      UnknownJavaScriptObject: findType("UnknownJavaScriptObject"),
       bool: findType("bool"),
       double: findType("double"),
       dynamic: findType("@"),
@@ -3900,135 +3630,11 @@
     B.Interceptor_methods = J.Interceptor.prototype;
     B.JSArray_methods = J.JSArray.prototype;
     B.JSString_methods = J.JSString.prototype;
-    B.JavaScriptFunction_methods = J.JavaScriptFunction.prototype;
     B.JavaScriptObject_methods = J.JavaScriptObject.prototype;
-    B.PlainJavaScriptObject_methods = J.PlainJavaScriptObject.prototype;
-    B.UnknownJavaScriptObject_methods = J.UnknownJavaScriptObject.prototype;
     B.C_JS_CONST = function getTagFallback(o) {
   var s = Object.prototype.toString.call(o);
   return s.substring(8, s.length - 1);
 };
-    B.C_JS_CONST0 = function() {
-  var toStringFunction = Object.prototype.toString;
-  function getTag(o) {
-    var s = toStringFunction.call(o);
-    return s.substring(8, s.length - 1);
-  }
-  function getUnknownTag(object, tag) {
-    if (/^HTML[A-Z].*Element$/.test(tag)) {
-      var name = toStringFunction.call(object);
-      if (name == "[object Object]") return null;
-      return "HTMLElement";
-    }
-  }
-  function getUnknownTagGenericBrowser(object, tag) {
-    if (object instanceof HTMLElement) return "HTMLElement";
-    return getUnknownTag(object, tag);
-  }
-  function prototypeForTag(tag) {
-    if (typeof window == "undefined") return null;
-    if (typeof window[tag] == "undefined") return null;
-    var constructor = window[tag];
-    if (typeof constructor != "function") return null;
-    return constructor.prototype;
-  }
-  function discriminator(tag) { return null; }
-  var isBrowser = typeof HTMLElement == "function";
-  return {
-    getTag: getTag,
-    getUnknownTag: isBrowser ? getUnknownTagGenericBrowser : getUnknownTag,
-    prototypeForTag: prototypeForTag,
-    discriminator: discriminator };
-};
-    B.C_JS_CONST6 = function(getTagFallback) {
-  return function(hooks) {
-    if (typeof navigator != "object") return hooks;
-    var userAgent = navigator.userAgent;
-    if (typeof userAgent != "string") return hooks;
-    if (userAgent.indexOf("DumpRenderTree") >= 0) return hooks;
-    if (userAgent.indexOf("Chrome") >= 0) {
-      function confirm(p) {
-        return typeof window == "object" && window[p] && window[p].name == p;
-      }
-      if (confirm("Window") && confirm("HTMLElement")) return hooks;
-    }
-    hooks.getTag = getTagFallback;
-  };
-};
-    B.C_JS_CONST1 = function(hooks) {
-  if (typeof dartExperimentalFixupGetTag != "function") return hooks;
-  hooks.getTag = dartExperimentalFixupGetTag(hooks.getTag);
-};
-    B.C_JS_CONST5 = function(hooks) {
-  if (typeof navigator != "object") return hooks;
-  var userAgent = navigator.userAgent;
-  if (typeof userAgent != "string") return hooks;
-  if (userAgent.indexOf("Firefox") == -1) return hooks;
-  var getTag = hooks.getTag;
-  var quickMap = {
-    "BeforeUnloadEvent": "Event",
-    "DataTransfer": "Clipboard",
-    "GeoGeolocation": "Geolocation",
-    "Location": "!Location",
-    "WorkerMessageEvent": "MessageEvent",
-    "XMLDocument": "!Document"};
-  function getTagFirefox(o) {
-    var tag = getTag(o);
-    return quickMap[tag] || tag;
-  }
-  hooks.getTag = getTagFirefox;
-};
-    B.C_JS_CONST4 = function(hooks) {
-  if (typeof navigator != "object") return hooks;
-  var userAgent = navigator.userAgent;
-  if (typeof userAgent != "string") return hooks;
-  if (userAgent.indexOf("Trident/") == -1) return hooks;
-  var getTag = hooks.getTag;
-  var quickMap = {
-    "BeforeUnloadEvent": "Event",
-    "DataTransfer": "Clipboard",
-    "HTMLDDElement": "HTMLElement",
-    "HTMLDTElement": "HTMLElement",
-    "HTMLPhraseElement": "HTMLElement",
-    "Position": "Geoposition"
-  };
-  function getTagIE(o) {
-    var tag = getTag(o);
-    var newTag = quickMap[tag];
-    if (newTag) return newTag;
-    if (tag == "Object") {
-      if (window.DataView && (o instanceof window.DataView)) return "DataView";
-    }
-    return tag;
-  }
-  function prototypeForTagIE(tag) {
-    var constructor = window[tag];
-    if (constructor == null) return null;
-    return constructor.prototype;
-  }
-  hooks.getTag = getTagIE;
-  hooks.prototypeForTag = prototypeForTagIE;
-};
-    B.C_JS_CONST2 = function(hooks) {
-  var getTag = hooks.getTag;
-  var prototypeForTag = hooks.prototypeForTag;
-  function getTagFixed(o) {
-    var tag = getTag(o);
-    if (tag == "Document") {
-      if (!!o.xmlVersion) return "!Document";
-      return "!HTMLDocument";
-    }
-    return tag;
-  }
-  function prototypeForTagFixed(tag) {
-    if (tag == "Document") return null;
-    return prototypeForTag(tag);
-  }
-  hooks.getTag = getTagFixed;
-  hooks.prototypeForTag = prototypeForTagFixed;
-};
-    B.C_JS_CONST3 = function(hooks) { return hooks; }
-;
     B.C__Required = new A._Required();
     B.List_empty = A._setArrayType(makeConstList([]), type$.JSArray_dynamic);
     B.Object_empty = {};
@@ -4036,21 +3642,14 @@
     B.Symbol_call = new A.Symbol("call");
   })();
   (function staticFields() {
-    $._JS_INTEROP_INTERCEPTOR_TAG = null;
     $.toStringVisiting = A._setArrayType([], A.findType("JSArray<Object>"));
     $.Primitives__identityHashCodeProperty = null;
     $.BoundClosure__receiverFieldNameCache = null;
     $.BoundClosure__interceptorFieldNameCache = null;
-    $.getTagFunction = null;
-    $.alternateTagFunction = null;
-    $.prototypeForTagFunction = null;
-    $.dispatchRecordsForInstanceTags = null;
-    $.interceptorsForUncacheableTags = null;
-    $.initNativeDispatchFlag = null;
   })();
   (function lazyInitializers() {
     var _lazyFinal = hunkHelpers.lazyFinal;
-    _lazyFinal($, "DART_CLOSURE_PROPERTY_NAME", "$get$DART_CLOSURE_PROPERTY_NAME", () => A.getIsolateAffinityTag("_$dart_dartClosure"));
+    _lazyFinal($, "DART_CLOSURE_PROPERTY_NAME", "$get$DART_CLOSURE_PROPERTY_NAME", () => init.getIsolateTag("_$dart_dartClosure"));
   })();
   (function nativeSupport() {
     !function() {
@@ -4073,10 +3672,9 @@
           break;
         }
       }
-      init.dispatchPropertyName = init.getIsolateTag("dispatch_record");
     }();
-    hunkHelpers.setOrUpdateInterceptorsByTag({ApplicationCacheErrorEvent: J.JavaScriptObject, DOMError: J.JavaScriptObject, ErrorEvent: J.JavaScriptObject, Event: J.JavaScriptObject, InputEvent: J.JavaScriptObject, SubmitEvent: J.JavaScriptObject, MediaError: J.JavaScriptObject, NavigatorUserMediaError: J.JavaScriptObject, OverconstrainedError: J.JavaScriptObject, PositionError: J.JavaScriptObject, GeolocationPositionError: J.JavaScriptObject, SensorErrorEvent: J.JavaScriptObject, SpeechRecognitionError: J.JavaScriptObject, DOMException: A.DomException});
-    hunkHelpers.setOrUpdateLeafTags({ApplicationCacheErrorEvent: true, DOMError: true, ErrorEvent: true, Event: true, InputEvent: true, SubmitEvent: true, MediaError: true, NavigatorUserMediaError: true, OverconstrainedError: true, PositionError: true, GeolocationPositionError: true, SensorErrorEvent: true, SpeechRecognitionError: true, DOMException: true});
+    hunkHelpers.setOrUpdateInterceptorsByTag({});
+    hunkHelpers.setOrUpdateLeafTags({});
   })();
   Function.prototype.call$0 = function() {
     return this();
